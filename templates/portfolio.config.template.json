@@ -1,0 +1,28 @@
+{
+  "githubUsername": "",
+  "theme": "matrix",
+  "profile": {
+    "name": "",
+    "role": "Developer",
+    "location": "",
+    "email": "",
+    "tagline": "I build practical software and reliable systems.",
+    "about": "Add a short professional introduction here.",
+    "availability": "Open to interesting technical projects.",
+    "resumeHighlights": [],
+    "skills": []
+  },
+  "socials": [],
+  "importOptions": {
+    "includeForks": true,
+    "includeArchived": false,
+    "minimumSizeKb": 1,
+    "maxRepos": 100,
+    "sort": "updated",
+    "manualSummaryWhenNoReadme": true
+  },
+  "installer": {
+    "supportProjectUrl": "https://github.com/Byanski/Portfolio-Dashboard",
+    "thankYouMessage": "Thank you for supporting open source development. If this helped you, please consider starring the project on GitHub."
+  }
+}

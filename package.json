@@ -1,0 +1,29 @@
+{
+  "name": "portfolio-dashboard",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "setup": "python scripts/generate_portfolio.py --init",
+    "import:github": "python scripts/generate_portfolio.py",
+    "installer": "python scripts/installer_gui.py",
+    "build:installer:windows": "powershell -ExecutionPolicy Bypass -File scripts/build_windows_exe.ps1",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "framer-motion": "^12.23.24",
+    "lucide-react": "^0.468.0",
+    "vite": "^6.0.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.1",
+    "@types/react-dom": "^19.0.2",
+    "typescript": "^5.7.2"
+  }
+}

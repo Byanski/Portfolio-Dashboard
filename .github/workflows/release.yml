@@ -1,0 +1,127 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, for example v0.1.0"
+        required: true
+        default: "v0.1.0"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build Windows EXE
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Validate web build
+        run: npm run build
+
+      - name: Build installer EXE
+        shell: pwsh
+        run: .\scripts\build_windows_exe.ps1
+
+      - name: Prepare Windows package
+        shell: pwsh
+        run: |
+          $package = "Portfolio-Dashboard-Windows"
+          New-Item -ItemType Directory -Force -Path $package | Out-Null
+          Copy-Item PortfolioBuilderInstaller.exe $package\
+          Copy-Item package.json,package-lock.json,index.html,README.md,install.sh,tsconfig.json,tsconfig.app.json,vite.config.ts $package\
+          Copy-Item src $package\src -Recurse
+          Copy-Item scripts $package\scripts -Recurse
+          Copy-Item templates $package\templates -Recurse
+          Compress-Archive -Path $package -DestinationPath "$package.zip" -Force
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Portfolio-Dashboard-Windows
+          path: Portfolio-Dashboard-Windows.zip
+
+  package-linux:
+    name: Package Linux Installer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Validate web build
+        run: npm run build
+
+      - name: Prepare Linux package
+        run: |
+          package="Portfolio-Dashboard-Linux"
+          mkdir -p "$package"
+          cp package.json package-lock.json index.html README.md install.sh tsconfig.json tsconfig.app.json vite.config.ts "$package/"
+          cp -R src scripts templates "$package/"
+          chmod +x "$package/install.sh"
+          tar -czf "$package.tar.gz" "$package"
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Portfolio-Dashboard-Linux
+          path: Portfolio-Dashboard-Linux.tar.gz
+
+  release:
+    name: Publish GitHub Release
+    needs:
+      - build-windows
+      - package-linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Portfolio Dashboard ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          files: |
+            artifacts/Portfolio-Dashboard-Windows/Portfolio-Dashboard-Windows.zip
+            artifacts/Portfolio-Dashboard-Linux/Portfolio-Dashboard-Linux.tar.gz

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+logs/
+.portfolio-cache/
+build/
+*.spec
+PortfolioBuilderInstaller.exe
+portfolio.config.json
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
