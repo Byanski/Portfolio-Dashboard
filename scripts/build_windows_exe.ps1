@@ -28,6 +28,14 @@ Write-Host "Building PortfolioBuilderInstaller.exe..."
   --onefile `
   --windowed `
   --name PortfolioBuilderInstaller `
+  --hidden-import argparse `
+  --hidden-import dataclasses `
+  --hidden-import hashlib `
+  --hidden-import textwrap `
+  --hidden-import typing `
+  --hidden-import urllib.error `
+  --hidden-import urllib.parse `
+  --hidden-import urllib.request `
   --add-data "templates;templates" `
   --add-data "scripts\generate_portfolio.py;scripts" `
   scripts\installer_gui.py

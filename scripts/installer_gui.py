@@ -19,7 +19,7 @@ import sys
 import threading
 import webbrowser
 from pathlib import Path
-from tkinter import BooleanVar, StringVar, Tk, Toplevel, messagebox
+from tkinter import BooleanVar, Canvas, StringVar, Tk, Toplevel, messagebox
 from tkinter import ttk
 
 
@@ -112,6 +112,7 @@ def run_generator() -> None:
         raise RuntimeError("Could not load the GitHub importer.")
 
     module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     module.ROOT = ROOT
     module.CONFIG_PATH = CONFIG_PATH
@@ -124,8 +125,8 @@ class InstallerApp:
     def __init__(self) -> None:
         self.root = Tk()
         self.root.title("Portfolio Builder Installer")
-        self.root.geometry("820x720")
-        self.root.minsize(760, 650)
+        self.root.geometry("860x760")
+        self.root.minsize(760, 560)
         self.root.configure(bg="#0b1110")
 
         self.events: queue.Queue[tuple[str, object]] = queue.Queue()
@@ -165,7 +166,34 @@ class InstallerApp:
             wraplength=740,
         ).pack(anchor="w", pady=(8, 18))
 
-        form = ttk.Frame(outer, style="Card.TFrame", padding=18)
+        scroll_shell = ttk.Frame(outer)
+        scroll_shell.pack(fill="both", expand=True)
+
+        canvas = Canvas(scroll_shell, bg="#0b1110", highlightthickness=0, borderwidth=0)
+        scrollbar = ttk.Scrollbar(scroll_shell, orient="vertical", command=canvas.yview)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
+
+        scroll_content = ttk.Frame(canvas)
+        canvas_window = canvas.create_window((0, 0), window=scroll_content, anchor="nw")
+
+        def update_scroll_region(_: object | None = None) -> None:
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        def update_canvas_width(event: object) -> None:
+            canvas.itemconfigure(canvas_window, width=event.width)
+
+        def on_mousewheel(event: object) -> None:
+            delta = getattr(event, "delta", 0)
+            if delta:
+                canvas.yview_scroll(int(-1 * (delta / 120)), "units")
+
+        scroll_content.bind("<Configure>", update_scroll_region)
+        canvas.bind("<Configure>", update_canvas_width)
+        canvas.bind_all("<MouseWheel>", on_mousewheel)
+
+        form = ttk.Frame(scroll_content, style="Card.TFrame", padding=18)
         form.pack(fill="both", expand=True)
 
         self.add_entry(form, "GitHub URL or username", self.github_var, required=True, row=0)
@@ -212,14 +240,17 @@ class InstallerApp:
         form.columnconfigure(1, weight=1)
         form.rowconfigure(8, weight=1)
 
-        progress_row = ttk.Frame(outer)
-        progress_row.pack(fill="x", pady=(18, 0))
+        footer = ttk.Frame(outer)
+        footer.pack(fill="x", side="bottom", pady=(18, 0))
+
+        progress_row = ttk.Frame(footer)
+        progress_row.pack(fill="x")
         self.progress = ttk.Progressbar(progress_row, maximum=100, mode="determinate")
         self.progress.pack(side="left", fill="x", expand=True)
         ttk.Label(progress_row, textvariable=self.progress_var, width=6).pack(side="left", padx=(10, 0))
-        ttk.Label(outer, textvariable=self.status_var, style="Muted.TLabel").pack(anchor="w", pady=(8, 12))
+        ttk.Label(footer, textvariable=self.status_var, style="Muted.TLabel").pack(anchor="w", pady=(8, 12))
 
-        buttons = ttk.Frame(outer)
+        buttons = ttk.Frame(footer)
         buttons.pack(fill="x")
         self.install_button = ttk.Button(buttons, text="Install Portfolio", command=self.start_install)
         self.install_button.pack(side="right")

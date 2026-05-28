@@ -220,10 +220,9 @@ function ProjectIndex() {
           <Wrench size={16} />
           GitHub projects
         </p>
-        <h2>Project pages generated from public repositories with real uploaded work.</h2>
+        <h2>Explore my projects and the systems behind them.</h2>
         <p>
-          Each card links to a detail page and the source repo. Update summaries, ordering, or links in
-          <code> src/data/portfolio.ts</code>.
+          A closer look at the tools, automations, infrastructure, and experiments I have built across my GitHub work.
         </p>
       </motion.div>
       <div className="project-grid">
